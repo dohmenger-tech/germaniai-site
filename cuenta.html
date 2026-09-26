@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi cuenta GermanIAI</title>
+<meta name="description" content="Tus consultas y tus datos en GermanIAI.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+*{box-sizing:border-box}body{margin:0;padding-top:env(safe-area-inset-top,0px)}
+:root{--bg:#FBF6EF;--surface:#FFFFFF;--ink:#16323D;--muted:#5B6E75;--line:#E6DDD0;--azul:#1B5E7A;--verde:#2E9C7C;--coral:#E8603F;--amar:#FFC24B;--chip:#EFE7DA;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;--amar:#FFC24B;--chip:#1E3640;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;--amar:#FFC24B;--chip:#1E3640;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:28px 60px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:clamp(30px,6vw,46px);margin:0;color:var(--azul);letter-spacing:-.01em;text-wrap:balance}
+h1 b{color:var(--coral);font-weight:600}
+.lead{margin:0;max-width:64ch;color:var(--muted)}
+.meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.gov{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:6px}
+.gov strong{color:var(--azul)}
+.tools{display:flex;flex-direction:column;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:10px;z-index:2}
+#q{font:inherit;font-size:16px;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;box-sizing:border-box}
+#q:focus-visible,button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--azul);color:var(--bg);border-color:var(--azul)}
+.count{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.name{font-family:Fredoka,Nunito,sans-serif;font-weight:500;font-size:21px;color:var(--ink)}
+.name em{font-style:normal;color:var(--coral)}
+.num{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.word{font-size:13px;color:var(--muted)}
+.fam{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--verde);font-weight:700}
+.alc{margin:0;font-size:14px}
+details{font-size:13px;color:var(--muted)}
+summary{cursor:pointer;color:var(--azul);font-weight:600}
+.esp{border-left:3px solid var(--amar);padding-left:8px;color:var(--ink)}
+.ask{background:var(--surface);border:2px solid var(--azul);border-radius:16px;padding:18px;display:grid;gap:10px}
+.ask h2{margin:0}
+.ask label{font-size:13px;font-weight:700;color:var(--muted)}
+.ask select,.ask textarea{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask textarea{min-height:96px;resize:vertical}
+.go{font:inherit;font-weight:700;font-size:16px;border:0;background:var(--coral);color:#fff;padding:12px 18px;border-radius:12px;cursor:pointer;justify-self:start}
+.go:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.askbtn{font:inherit;font-size:12px;font-weight:700;border:0;background:var(--coral);color:#fff;padding:5px 12px;border-radius:8px;cursor:pointer}
+.resp{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:14px}
+.turno .q{font-weight:700;color:var(--azul)}
+.turno .a{line-height:1.6}
+.turno .a h1,.turno .a h2,.turno .a h3{font-family:Fredoka,Nunito,sans-serif;font-weight:500;color:var(--azul);font-size:18px;margin:12px 0 4px}
+.turno .a table{border-collapse:collapse;display:block;overflow-x:auto}
+.turno .a td,.turno .a th{border:1px solid var(--line);padding:4px 8px}
+.who{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--verde);font-weight:700}
+.fu{border-top:1px dashed var(--line);margin-top:10px;padding-top:8px;font-size:13px}.fu a{color:var(--azul);word-break:break-word}
+.err{color:var(--coral)}
+.pensando{color:var(--muted);font-style:italic}
+.nav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:14px}
+.nav a{color:var(--azul);font-weight:700;text-decoration:none}
+#giaBarra{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#giaBarra button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+#giaBarra .gia-g{background:var(--azul);color:var(--bg);border-color:var(--azul);font-weight:700}
+.gia-yo{color:var(--muted)}
+#giaEmailForm{display:flex;gap:8px;flex-wrap:wrap}#giaEmailForm input{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);flex:1;min-width:200px}
+#giaEmailForm button{font:inherit;border:0;background:var(--azul);color:var(--bg);padding:8px 14px;border-radius:8px;cursor:pointer}
+#giaAviso{font-size:13px;color:var(--verde)}
+.copy{align-self:flex-start;font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--azul);padding:4px 10px;border-radius:8px;cursor:pointer}
+.diag{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+h2{font-family:Fredoka,Nunito,sans-serif;font-weight:500;font-size:22px;margin:6px 0 0;color:var(--azul)}
+.card2{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.muted{color:var(--muted);font-size:13px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 14px;cursor:pointer;color:#fff}
+.btn.ok{background:var(--verde)}.btn.no{background:var(--coral)}.btn.sec{background:transparent;border:1px solid var(--line);color:var(--azul)}
+textarea.ed,input.ed{font:inherit;font-size:15px;width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);box-sizing:border-box}
+textarea.ed{min-height:120px}
+.toc a{color:var(--azul)}
+.cap h2{border-bottom:2px solid var(--line);padding-bottom:4px}
+.bar{height:10px;background:var(--azul);border-radius:5px}
+.tabla{width:100%;border-collapse:collapse;font-size:14px}.tabla td,.tabla th{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+.fu a{color:var(--azul);word-break:break-word}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="nav" aria-label="Principal"><div style="display:flex;gap:14px;flex-wrap:wrap"><a href="./">GermanIAI</a><a href="libro.html">El libro</a><a href="estadisticas.html">Estadísticas</a><a href="privacidad.html">Privacidad</a></div><div id="giaBarra"></div></nav>
+<form id="giaEmailForm" hidden><input id="giaEmail" type="email" required placeholder="tu@correo.com (Yahoo, Outlook, etc.)" aria-label="Correo para ingresar"><button type="submit">Enviarme enlace de ingreso</button></form>
+<div id="giaAviso" hidden></div>
+<header style="display:grid;gap:6px"><h1>Mi cuenta</h1><p class="lead">Tus consultas y tus datos son privados: sólo vos (y el administrador, para su custodia) pueden verlos.</p></header>
+<div id="estado" class="muted">Verificando sesión…</div>
+<section class="card2" id="perfil" hidden><h2 style="margin:0">Mis datos (opcionales)</h2>
+<label class="muted" for="pNom">Nombre</label><input class="ed" id="pNom">
+<label class="muted" for="pPais">País</label><input class="ed" id="pPais">
+<label class="muted" for="pProv">Provincia / estado</label><input class="ed" id="pProv">
+<label class="muted" for="pOcu">Ocupación</label><input class="ed" id="pOcu">
+<label style="display:flex;gap:8px;font-size:14px"><input type="checkbox" id="pAcepto"> Leí y acepto la <a href="privacidad.html" style="color:var(--azul)">política de privacidad</a>.</label>
+<button class="btn ok" id="pGuardar" style="justify-self:start">Guardar</button><span class="muted" id="pRes"></span></section>
+<section class="card2" id="mias" hidden><h2 style="margin:0">Mis consultas</h2><div id="lista"></div></section>
+<section class="card2" id="borrar" hidden><h2 style="margin:0">Borrar mis datos</h2><p class="muted">Borra tu perfil y todas tus consultas privadas y pendientes. Las ya publicadas en el libro quedan anónimas.</p><button class="btn no" id="bBorrar" style="justify-self:start">Borrar mis datos</button><span class="muted" id="bRes"></span></section>
+<footer class="meta" style="border-top:1px solid var(--line);padding-top:14px">GermanIAI · DohmenGer · <a href="privacidad.html" style="color:var(--azul)">Privacidad</a> · Información general: no reemplaza la consulta médica ni legal. Emergencias en Argentina: 911 / 107.</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md=t=>{try{return DOMPurify.sanitize(marked.parse(t));}catch(e){return esc(t).replace(/\n/g,'<br>');}};
+const SB=()=>window.GIAauth&&GIAauth.sb;
+async function cargar(){
+ const s=await GIAauth.sesion(),est=document.getElementById('estado');
+ if(!s){est.textContent='Ingresá con Google, Microsoft/Hotmail u otro correo desde la barra de arriba.';return;}
+ est.textContent='Sesión: '+s.user.email;['perfil','mias','borrar'].forEach(i=>document.getElementById(i).hidden=false);
+ const uid=s.user.id;
+ const {data:p}=await SB().from('perfiles').select('*').eq('id',uid).maybeSingle();
+ if(p){pNom.value=p.nombre||'';pPais.value=p.pais||'';pProv.value=p.provincia||'';pOcu.value=p.ocupacion||'';pAcepto.checked=!!p.acepta_terminos_at;}
+ const {data:L}=await SB().from('investigaciones').select('id,ia,pregunta,estado,creada_at').eq('usuario_id',uid).order('creada_at',{ascending:false}).limit(200);
+ document.getElementById('lista').innerHTML=(L||[]).length?'<table class="tabla"><tr><th>Fecha</th><th>IA</th><th>Pregunta</th><th>Estado</th></tr>'+L.map(r=>'<tr><td>'+new Date(r.creada_at).toLocaleDateString('es-AR')+'</td><td>'+esc(r.ia)+'</td><td>'+esc(r.pregunta.slice(0,120))+'</td><td>'+esc(r.estado)+'</td></tr>').join('')+'</table>':'<span class="muted">Todavía no hiciste consultas con tu cuenta.</span>';
+ pGuardar.onclick=async()=>{const {error}=await SB().from('perfiles').upsert({id:uid,nombre:pNom.value,pais:pPais.value,provincia:pProv.value,ocupacion:pOcu.value,acepta_terminos_at:pAcepto.checked?new Date().toISOString():null});pRes.textContent=error?'Error: '+error.message:'Guardado.';};
+ bBorrar.onclick=async()=>{if(bBorrar.textContent!=='Confirmar: borrar todo'){bBorrar.textContent='Confirmar: borrar todo';return;}
+  await SB().from('investigaciones').delete().eq('usuario_id',uid).in('estado',['privada','pendiente','descartada']);
+  await SB().from('perfiles').delete().eq('id',uid); bRes.textContent='Tus datos fueron borrados.';};
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(cargar,300));
+</script>
+</body>
+</html>
