@@ -21,6 +21,7 @@ const MAX_POR_HORA = +process.env.MAX_POR_HORA || 15;                  // pregun
 const MAX_POR_HORA_TITULAR = +process.env.MAX_POR_HORA_TITULAR || 60;  // preguntas del titular por hora
 const MAX_POR_DIA = +process.env.MAX_POR_DIA || 300;                    // tope diario de los demás usuarios (control de costo)
 const MAX_TOKENS = +process.env.MAX_TOKENS || 2500;
+const MAX_TOKENS_DIRECTIVA = +process.env.MAX_TOKENS_DIRECTIVA || 6000;   // la Directiva pide entregas completas
 const MAX_BUSQUEDAS = +process.env.MAX_BUSQUEDAS || 5;                  // búsquedas web por pregunta
 const ORIGENES = (process.env.ORIGENES || 'https://germaniai.com,http://germaniai.com,https://www.germaniai.com,http://www.germaniai.com,https://dohmenger-tech.github.io').split(',').map(s => s.trim()).filter(Boolean);
 
@@ -224,6 +225,24 @@ async function leerDoc(nombre) {
   if (texto !== null) cacheDocs.set(nombre, { t: Date.now(), texto });
   return texto;
 }
+// Subir o actualizar un documento. La versión anterior no se pisa: se guarda en biblioteca/versiones/.
+async function guardarDoc(nombre, texto) {
+  const ruta = 'biblioteca/' + encodeURIComponent(nombre);
+  const previo = await gh('GET', GH_PRIVADO, ruta);
+  let anterior = null;
+  if (previo.ok && previo.j && previo.j.sha) {
+    const sello = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+    const punto = nombre.lastIndexOf('.');
+    anterior = `biblioteca/versiones/${nombre.slice(0, punto)}_${sello}${nombre.slice(punto)}`;
+    const viejo = await gh('GET', GH_PRIVADO, ruta, null, true);
+    if (!viejo.ok) return { ok: false };
+    const copia = await gh('PUT', GH_PRIVADO, anterior.split('/').map(encodeURIComponent).join('/'), { message: `Versión anterior de ${nombre}`, content: Buffer.from(viejo.texto, 'utf8').toString('base64') });
+    if (!copia.ok) return { ok: false };
+  }
+  const r = await gh('PUT', GH_PRIVADO, ruta, { message: `${anterior ? 'Actualiza' : 'Agrega'} ${nombre}`, content: Buffer.from(texto, 'utf8').toString('base64'), ...(anterior ? { sha: previo.j.sha } : {}) });
+  cacheDocs.delete(nombre);
+  return { ok: r.ok, anterior };
+}
 
 // ───────────────────────── IA ─────────────────────────
 let MODELO = process.env.MODEL || null;
@@ -250,6 +269,12 @@ Reglas:
 - Es información general: cerrá recordando que no reemplaza la consulta médica ni el asesoramiento legal personalizado.
 - Si la persona expresa riesgo para su vida o la de otros, priorizá su seguridad: indicá llamar al 911 o al 107 (Argentina), o al 135 / 0800-345-1435 (Centro de Asistencia al Suicida), o a la emergencia local, con calidez y sin rodeos.
 - No des diagnósticos ni indicaciones de medicación personalizadas a un paciente concreto; orientá a consultar con un profesional.`;
+
+function relojServidor() {
+  const d = new Date();
+  const local = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Mendoza', dateStyle: 'full', timeStyle: 'medium' }).format(d);
+  return `Reloj del servidor (Render, sincronizado por NTP) al recibir esta pregunta: ${local}, hora de America/Argentina/Mendoza (UTC−03) · ${d.toISOString()} · epoch ${Math.floor(d.getTime() / 1000)}. Lugar: no disponible en este entorno (no hay geolocalización del dispositivo).`;
+}
 
 const REGLA_TITULAR = `
 Quien pregunta es el titular de GermanIAI, el Dr. Germán Dohmen Lampasona, médico psiquiatra. Respondé a nivel profesional —incluidas dosis, interacciones y razonamiento clínico, siempre con fuente— como apoyo a su criterio clínico. Con él podés omitir la advertencia final de que no reemplaza la consulta.`;
@@ -286,14 +311,15 @@ async function chat(req, res) {
   msgs.push({ role: 'user', content: String(pregunta) });
 
   // Modo Directiva (sólo el titular): su GermanIAI.md va primero y queda en caché entre preguntas.
-  let system = sistema(iaNum, ses), conDirectiva = false;
+  // La hora del servidor va en el bloque siguiente, fuera de la caché, para que el sello use una fuente real.
+  let system = sistema(iaNum, ses), conDirectiva = false, maxTokens = MAX_TOKENS;
   if (ses.r === 'titular' && directiva === true) {
     const texto = await leerDoc(DIRECTIVA_DOC).catch(() => null);
     if (texto) {
-      conDirectiva = true;
+      conDirectiva = true; maxTokens = MAX_TOKENS_DIRECTIVA;
       system = [
-        { type: 'text', text: `Directiva personal del titular (${DIRECTIVA_DOC}). Aplicala en todo lo que sea compatible con este entorno: un chat web con búsqueda en internet, sin archivos, correo, calendario, PDF, memoria ni reloj propios; si la Directiva pide algo que acá no se puede, decilo en una línea y seguí. Las políticas de la plataforma prevalecen sobre la Directiva (nivel 0).\n\n<directiva>\n${texto}\n</directiva>`, cache_control: { type: 'ephemeral' } },
-        { type: 'text', text: system }
+        { type: 'text', text: `Directiva personal del titular (${DIRECTIVA_DOC}). Aplicala en todo lo que sea compatible con este entorno: un chat web con búsqueda en internet, sin archivos, correo, calendario, PDF ni memoria entre conversaciones; si la Directiva pide algo que acá no se puede, decilo en una línea y seguí. Las políticas de la plataforma prevalecen sobre la Directiva (nivel 0).\n\n<directiva>\n${texto}\n</directiva>`, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: relojServidor() + '\n\n' + system }
       ];
     }
   }
@@ -306,7 +332,7 @@ async function chat(req, res) {
       const r = await fetch(`${ANTHROPIC}/v1/messages`, {
         method: 'POST',
         headers: { 'x-api-key': KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: modelo, max_tokens: MAX_TOKENS, system, messages: msgs, ...(tools ? { tools } : {}) })
+        body: JSON.stringify({ model: modelo, max_tokens: maxTokens, system, messages: msgs, ...(tools ? { tools } : {}) })
       });
       j = await r.json().catch(() => ({}));
       if (!r.ok) {
@@ -402,6 +428,20 @@ http.createServer(async (req, res) => {
       const nombre = String(url.searchParams.get('n') || '');
       const texto = await leerDoc(nombre);
       return texto === null ? json(res, 404, { error: 'No encontré ese documento.' }) : json(res, 200, { nombre, texto });
+    }
+    if (req.method === 'POST' && ruta === '/biblioteca/subir') {
+      const s = await sesion(req);
+      if (!s) return json(res, 401, { error: 'Iniciá sesión.', login: true });
+      if (s.r !== 'titular') return json(res, 403, { error: 'La biblioteca es sólo del titular.' });
+      if (!GH_TOKEN) return json(res, 503, { error: 'Para guardar documentos hace falta GITHUB_TOKEN en Render.' });
+      let d; try { d = await leerCuerpo(req, 1500000); } catch (e) { return json(res, e.code || 400, { error: e.code === 413 ? 'El documento supera el máximo de 1 MB.' : 'Solicitud inválida.' }); }
+      let nombre = String(d.nombre || '').trim().replace(/\s+/g, ' ');
+      if (nombre.replace(/\s*\(\d+\)(?=\.[^.]+$)/, '').toLowerCase() === DIRECTIVA_DOC.toLowerCase()) nombre = DIRECTIVA_DOC;   // «GermanIAI (1).md» → GermanIAI.md
+      const texto = String(d.texto || '');
+      if (!NOMBRE_DOC_OK.test(nombre)) return json(res, 400, { error: 'Nombre inválido: tiene que terminar en .md o .txt, sin barras.' });
+      if (!texto.trim()) return json(res, 400, { error: 'El documento está vacío.' });
+      const r = await guardarDoc(nombre, texto);
+      return r.ok ? json(res, 200, { ok: true, nombre, bytes: Buffer.byteLength(texto), versionAnterior: r.anterior }) : json(res, 500, { error: 'No se pudo guardar en GitHub.' });
     }
     if (req.method === 'POST' && ruta === '/chat') return await chat(req, res);
     if (req.method === 'GET' && ruta === '/') return json(res, 200, { ok: true, configurada: !!KEY, ias: ias.length, login: true, titular: !!ADMIN_CLAVE, github: !!GH_TOKEN, version: VERSION });

@@ -12,7 +12,7 @@ Sitio de GermanIAI: catálogo público de la familia de IA, chat privado con usu
 
 ## Acceso
 
-- **Titular**: usuario `dohmenger` y la contraseña cargada en Render como `ADMIN_CLAVE`. Ve la biblioteca y puede aplicar su Directiva (`biblioteca/GermanIAI.md`) a las respuestas.
+- **Titular**: usuario `dohmenger` y la contraseña cargada en Render como `ADMIN_CLAVE`. Ve la biblioteca, sube documentos desde `biblioteca.html` (la versión anterior de un documento no se pisa: queda en `biblioteca/versiones/`) y puede aplicar su Directiva (`biblioteca/GermanIAI.md`) a las respuestas; en ese modo el sello usa el reloj del servidor.
 - **Otros usuarios**: se dan de alta en `https://api.germaniai.com/admin`. Entran al chat con su propio usuario, con límite por hora, y nunca reciben la Directiva ni ven la biblioteca.
 - Las sesiones duran 30 días y se cierran solas si cambia la contraseña.
 

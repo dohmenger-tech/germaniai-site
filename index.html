@@ -190,12 +190,12 @@ function claudeLink(m,q){return 'https://claude.ai/new?q='+encodeURIComponent(pr
 async function preguntar(){
  const ta=$('pq'),q=ta.value.trim(); if(!q){ta.focus();return;}
  const m=cur(), box=$('resp'), go=$('goBtn');
+ const dir=!!(YO&&YO.rol==='titular'&&YO.directiva&&$('dirChk').checked);
  box.hidden=false; const t=document.createElement('div'); t.className='turno';
- t.innerHTML='<div class="q">'+esc(q)+'</div><div class="who">'+esc(m?m.nombre:'GermanIAI')+'</div><div class="a pensando">Investigando en fuentes oficiales y científicas… (puede tardar hasta un minuto)</div>';
+ t.innerHTML='<div class="q">'+esc(q)+'</div><div class="who">'+esc(m?m.nombre:'GermanIAI')+'</div><div class="a pensando">Investigando en fuentes oficiales y científicas… (puede tardar '+(dir?'hasta dos minutos: la Directiva pide entrega completa':'hasta un minuto')+')</div>';
  box.appendChild(t); t.scrollIntoView({behavior:'smooth',block:'start'}); go.disabled=true; go.textContent='Respondiendo…';
  const a=t.querySelector('.a');
  try{
-  const dir=!!(YO&&YO.rol==='titular'&&YO.directiva&&$('dirChk').checked);
   const {r,j}=await api('/chat',{method:'POST',body:JSON.stringify({ia:m?m.n:null,pregunta:q,historial:hist,publicar:$('pubChk').checked,directiva:dir})});
   if(r.status===401){$('loginErr').textContent='Tu sesión venció. Volvé a entrar con tu usuario y contraseña.';$('loginErr').hidden=false;$('lu').focus();return;}
   if(!r.ok||!j.respuesta) throw new Error(j.error||'La IA no está disponible en este momento.');

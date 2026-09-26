@@ -24,7 +24,8 @@ a{color:var(--azul)}
 .doc{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;text-align:left}
 .doc[aria-pressed="true"]{background:var(--azul);color:var(--bg);border-color:var(--azul)}
 .doc small{display:block;font-size:11px;opacity:.75}
-button.sec{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--azul);padding:6px 12px;border-radius:8px;cursor:pointer}
+button.sec,label.sec{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--azul);padding:6px 12px;border-radius:8px;cursor:pointer}
+label.subir{background:var(--surface);font-weight:700;padding:9px 14px}
 .aviso{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:10px;padding:12px 14px}
 .lector{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 @media (min-width:900px){.lector.con-indice{grid-template-columns:240px minmax(0,1fr)}}
@@ -49,6 +50,11 @@ mark{background:var(--amar);color:#16323D}
 <h1>Biblioteca privada</h1>
 <p class="meta" style="margin:0">Documentos del titular. Sólo se ven con su sesión iniciada; no quedan guardados en este dispositivo.</p>
 <div id="estado" class="aviso" hidden></div>
+<div class="barra" id="subirBarra" hidden>
+<label class="sec subir" for="archivo">Agregar o actualizar documento (.md o .txt)</label>
+<input id="archivo" type="file" accept=".md,.txt,text/markdown,text/plain" hidden>
+<span class="meta" id="subirRes" role="status"></span>
+</div>
 <div class="docs" id="docs"></div>
 <div id="herr" class="barra" hidden>
 <input id="filtro" type="search" placeholder="Buscar en el documento" aria-label="Buscar en el documento" style="flex:1;min-width:200px">
@@ -67,7 +73,7 @@ let TOKEN=null,BASE=null,ACTUAL=null;
 try{TOKEN=localStorage.getItem('germaniai_sesion');}catch(e){}
 function aviso(html){const e=$('estado');e.innerHTML=html;e.hidden=!html;}
 async function base(){if(BASE)return BASE;for(const b of BASES){try{const r=await fetch(b+'/',{cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok&&j.ok){BASE=b;return b;}}catch(e){}}throw new Error('Failed to fetch');}
-async function api(p){const b=await base();const r=await fetch(b+p,{headers:{Authorization:'Bearer '+TOKEN},cache:'no-store'});return {r,j:await r.json().catch(()=>({}))};}
+async function api(p,o={}){const b=await base();const r=await fetch(b+p,Object.assign({cache:'no-store'},o,{headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}}));return {r,j:await r.json().catch(()=>({}))};}
 const kb=n=>n>=1024?(n/1024).toFixed(n>=10240?0:1).replace('.',',')+' KB':n+' B';
 function pintar(md){
  const art=$('texto'),ind=$('indice');
@@ -94,6 +100,29 @@ $('filtro').addEventListener('input',()=>{
  $('cuenta').textContent=n+' coincidencias';const pm=art.querySelector('mark');if(pm)pm.scrollIntoView({block:'center'});
 });
 $('bajar').onclick=()=>{if(!ACTUAL)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ACTUAL.texto],{type:'text/markdown;charset=utf-8'}));a.download=ACTUAL.n;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);};
+$('docs').addEventListener('click',e=>{const b=e.target.closest('.doc');if(b)abrir(b.dataset.n,b);});
+async function listar(elegir){
+ const {r,j}=await api('/biblioteca');
+ if(r.status===403){aviso('La biblioteca es sólo del titular.');return;}
+ if(!r.ok){aviso(esc(j.error||'No se pudo leer la biblioteca.'));return;}
+ aviso('');$('subirBarra').hidden=!j.github;
+ if(!j.docs.length){$('docs').innerHTML='';aviso(j.github?'La biblioteca está vacía. Agregá tu <strong>GermanIAI.md</strong> con el botón de arriba.':'La biblioteca todavía no está conectada: falta cargar <strong>GITHUB_TOKEN</strong> en Render.');return;}
+ $('docs').innerHTML=j.docs.map(d=>'<button class="doc" type="button" data-n="'+esc(d.nombre)+'">'+esc(d.nombre)+'<small>'+kb(d.bytes||0)+'</small></button>').join('');
+ const pref=j.docs.find(d=>d.nombre===elegir)||j.docs.find(d=>d.nombre==='GermanIAI.md')||j.docs[0];abrir(pref.nombre,$('docs').querySelector('[data-n="'+CSS.escape(pref.nombre)+'"]'));
+}
+$('archivo').addEventListener('change',async()=>{
+ const f=$('archivo').files[0],res=$('subirRes');if(!f)return;
+ if(f.size>1000000){res.textContent='El archivo supera 1 MB.';return;}
+ res.textContent='Subiendo '+f.name+'…';
+ try{
+  const texto=await f.text();
+  const {r,j}=await api('/biblioteca/subir',{method:'POST',body:JSON.stringify({nombre:f.name,texto})});
+  if(!r.ok)throw new Error(j.error||'No se pudo guardar.');
+  res.textContent='Guardado: '+j.nombre+' ('+kb(j.bytes)+')'+(j.versionAnterior?'. La versión anterior quedó en versiones/.':'.');
+  await listar(j.nombre);
+ }catch(e){res.textContent=e.message==='Failed to fetch'?'El servidor no responde. Probá de nuevo.':e.message;}
+ finally{$('archivo').value='';}
+});
 (async()=>{
  if(!TOKEN){aviso('Para ver la biblioteca, primero <a href="./#preguntar">entrá con tu usuario y contraseña</a>.');return;}
  aviso('Conectando con el servidor… (si estaba dormido, puede tardar hasta un minuto)');
@@ -101,14 +130,7 @@ $('bajar').onclick=()=>{if(!ACTUAL)return;const a=document.createElement('a');a.
   const y=await api('/yo');
   if(y.r.status===401){try{localStorage.removeItem('germaniai_sesion');}catch(e){}aviso('Tu sesión venció. <a href="./#preguntar">Volvé a entrar</a>.');return;}
   $('ses').textContent='Sesión: '+(y.j.usuario||'');
-  const {r,j}=await api('/biblioteca');
-  if(r.status===403){aviso('La biblioteca es sólo del titular.');return;}
-  if(!r.ok){aviso(esc(j.error||'No se pudo leer la biblioteca.'));return;}
-  aviso('');
-  if(!j.docs.length){aviso(j.github?'La biblioteca está vacía.':'La biblioteca todavía no está conectada: falta cargar <strong>GITHUB_TOKEN</strong> en Render.');return;}
-  $('docs').innerHTML=j.docs.map(d=>'<button class="doc" type="button" data-n="'+esc(d.nombre)+'">'+esc(d.nombre)+'<small>'+kb(d.bytes||0)+'</small></button>').join('');
-  $('docs').addEventListener('click',e=>{const b=e.target.closest('.doc');if(b)abrir(b.dataset.n,b);});
-  const pref=j.docs.find(d=>d.nombre==='GermanIAI.md')||j.docs[0];abrir(pref.nombre,$('docs').querySelector('[data-n="'+CSS.escape(pref.nombre)+'"]'));
+  await listar();
  }catch(e){aviso('El servidor no responde. Probá de nuevo en 30 segundos.');}
 })();
 </script>
