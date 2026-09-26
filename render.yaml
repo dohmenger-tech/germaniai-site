@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: germaniai-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: echo sin dependencias
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: ADMIN_CLAVE
+        sync: false
+      - key: GITHUB_PRIVADO
+        value: dohmenger-tech/germaniai-pendientes
+      - key: MAX_POR_HORA
+        value: "15"
+      - key: MAX_POR_DIA
+        value: "300"

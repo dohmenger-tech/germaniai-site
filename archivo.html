@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Archivo GermanIAI</title>
+<meta name="description" content="Archivo público de las investigaciones respondidas por GermanIAI y su familia de IA, con sus fuentes.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#FBF6EF;--surface:#FFFFFF;--ink:#16323D;--muted:#5B6E75;--line:#E6DDD0;--azul:#1B5E7A;--verde:#2E9C7C;--coral:#E8603F;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-size:15px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:28px 60px;display:flex;flex-direction:column;gap:18px}
+h1{font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--azul);margin:0;font-size:clamp(28px,5vw,40px)}
+a{color:var(--azul)}
+#q{font:inherit;font-size:16px;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.item h2{font-size:17px;margin:0 0 4px;font-family:Fredoka,Nunito,sans-serif;font-weight:500}
+.meta{font-size:12px;color:var(--muted)}
+.cuerpo{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.cuerpo table{border-collapse:collapse;display:block;overflow-x:auto}.cuerpo td,.cuerpo th{border:1px solid var(--line);padding:4px 8px}
+.fu{font-size:13px;border-top:1px dashed var(--line);padding-top:8px}.fu a{word-break:break-word}
+button{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--azul);padding:4px 10px;border-radius:8px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="./">← Volver a GermanIAI</a>
+<h1>Archivo de investigaciones</h1>
+<p class="meta" style="font-size:14px">Cada pregunta hecha en germaniai.com se investiga en fuentes oficiales y científicas y, si la persona lo autoriza y el equipo de DohmenGer la revisa y aprueba, queda publicada acá con sus fuentes. Información general: no reemplaza la consulta médica ni el asesoramiento legal. Antes de publicar se quitan los datos personales.</p>
+<input id="q" type="search" placeholder="Buscar en el archivo" aria-label="Buscar en el archivo">
+<div id="count" class="meta"></div>
+<div id="lista" style="display:grid;gap:12px"><p class="meta">Cargando…</p></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script>
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md=t=>{try{return DOMPurify.sanitize(marked.parse(t));}catch(e){return esc(t).replace(/\n/g,'<br>');}};
+let R=[];
+const idSel=new URLSearchParams(location.search).get('id');
+function pintar(){
+ const q=document.getElementById('q').value.toLowerCase();
+ const L=R.filter(r=>!q||(r.pregunta+' '+r.respuesta+' '+r.ia).toLowerCase().includes(q));
+ document.getElementById('count').textContent=L.length+' investigaciones';
+ document.getElementById('lista').innerHTML=L.map(r=>`<article class="item" id="i-${esc(r.id)}"><h2>${esc(r.pregunta)}</h2>
+ <div class="meta">${esc(r.ia)} · ${new Date(r.fecha).toLocaleString('es-AR',{timeZone:'America/Argentina/Mendoza'})} · <a href="?id=${encodeURIComponent(r.id)}">enlace permanente</a></div>
+ <details ${r.id===idSel?'open':''}><summary style="cursor:pointer;color:var(--azul);margin-top:6px">Ver respuesta y fuentes</summary>
+ <div class="cuerpo">${md(r.respuesta)}${(r.fuentes||[]).length?'<div class="fu"><strong>Fuentes consultadas</strong><ol>'+r.fuentes.map(f=>'<li><a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.titulo)+'</a></li>').join('')+'</ol></div>':''}</div></details></article>`).join('')||'<p class="meta">Todavía no hay investigaciones publicadas.</p>';
+ if(idSel){const e=document.getElementById('i-'+idSel);if(e)e.scrollIntoView();}
+}
+(async()=>{
+ try{
+  const r=await fetch('https://api.github.com/repos/dohmenger-tech/germaniai-site/contents/investigaciones');
+  const files=r.ok?(await r.json()).filter(f=>f.name.endsWith('.json')).sort((a,b)=>b.name.localeCompare(a.name)).slice(0,200):[];
+  R=(await Promise.all(files.map(f=>fetch('investigaciones/'+f.name).then(x=>x.json()).catch(()=>null)))).filter(Boolean);
+ }catch(e){}
+ pintar();
+})();
+document.getElementById('q').addEventListener('input',pintar);
+</script>
+</body>
+</html>
