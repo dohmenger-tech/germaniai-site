@@ -40,6 +40,16 @@ h1 b{color:var(--coral);font-weight:600}
 details{font-size:13px;color:var(--muted)}
 summary{cursor:pointer;color:var(--azul);font-weight:600}
 .esp{border-left:3px solid var(--amar);padding-left:8px;color:var(--ink)}
+.ask{background:var(--surface);border:2px solid var(--azul);border-radius:16px;padding:18px;display:grid;gap:10px}
+.ask h2{margin:0}
+.ask label{font-size:13px;font-weight:700;color:var(--muted)}
+.ask select,.ask textarea{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask textarea{min-height:96px;resize:vertical}
+.go{font:inherit;font-weight:700;font-size:16px;border:0;background:var(--coral);color:#fff;padding:12px 18px;border-radius:12px;cursor:pointer;justify-self:start}
+.go:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.askbtn{font:inherit;font-size:12px;font-weight:700;border:0;background:var(--coral);color:#fff;padding:5px 12px;border-radius:8px;cursor:pointer}
 .copy{align-self:flex-start;font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--azul);padding:4px 10px;border-radius:8px;cursor:pointer}
 .diag{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
 h2{font-family:Fredoka,Nunito,sans-serif;font-weight:500;font-size:22px;margin:6px 0 0;color:var(--azul)}
@@ -58,6 +68,16 @@ h2{font-family:Fredoka,Nunito,sans-serif;font-weight:500;font-size:22px;margin:6
 <div><strong>Comandos:</strong> <code>IA LISTA</code> · <code>IA &lt;nombre&gt;</code> · <code>IA NUEVA &lt;tema&gt;</code></div>
 </section>
 
+<section class="ask" id="preguntar">
+<h2>Preguntale a GermanIAI</h2>
+<div><label for="iaSel">IA que responde</label>
+<select id="iaSel"><option value="">GermanIAI (elige sola la especialista adecuada)</option></select></div>
+<div><label for="pq">Tu pregunta</label>
+<textarea id="pq" placeholder="Ej.: ¿Qué dice la Ley 26.657 sobre la internación involuntaria?"></textarea></div>
+<button class="go" id="goBtn" type="button">Preguntar</button>
+<p class="hint">Se abre Claude en una pestaña nueva con la IA elegida ya cargada; la respuesta aparece ahí (hace falta una cuenta de Claude, la gratuita alcanza). Si no se abre, tocá «Copiar pregunta» y pegala en claude.ai.</p>
+<div class="row"><button class="copy" id="cpBtn" type="button">Copiar pregunta</button></div>
+</section>
 <h2>Catálogo</h2>
 <div class="tools">
 <input id="q" type="search" placeholder="Buscar por nombre, tema o fuente (p. ej. ansiedad, Talmud, Mendoza)" aria-label="Buscar IA">
@@ -81,10 +101,22 @@ document.getElementById('count').textContent=L.length+' de '+D.length+' IA';
 document.getElementById('grid').innerHTML=L.map(m=>`<article class="card"><div class="top"><span class="name">${hi(m.nombre)}</span><span class="num">N.º ${String(m.n).padStart(3,'0')}</span></div>
 <div class="fam">${m.fam} · ${esc(F[m.fam])}</div><div class="word">${esc(m.palabra)} — ${esc(m.comb)}</div><p class="alc">${esc(m.alcance)}</p>
 <details><summary>Fuentes${m.especial?' y regla especial':''}</summary><p>${esc(m.fuentes)}</p>${m.especial?`<p class="esp">${esc(m.especial)}</p>`:''}</details>
-<button class="copy" data-n="${esc(m.nombre)}">Copiar «${esc(m.nombre)}:»</button></article>`).join('');}
+<div class="row"><button class="askbtn" data-a="${m.n}">Preguntar a ${esc(m.nombre)}</button><button class="copy" data-n="${esc(m.nombre)}">Copiar «${esc(m.nombre)}:»</button></div></article>`).join('');}
 document.getElementById('grid').addEventListener('click',e=>{const b=e.target.closest('.copy');if(!b)return;const t=b.dataset.n+': ';
 navigator.clipboard?.writeText(t).then(()=>{b.textContent='Copiado';setTimeout(()=>b.textContent='Copiar «'+b.dataset.n+':»',1400)}).catch(()=>{b.textContent=t});});
 document.getElementById('q').addEventListener('input',render);render();
+const sel=document.getElementById('iaSel');
+D.forEach(m=>{const o=document.createElement('option');o.value=m.n;o.textContent=m.nombre+' — '+m.palabra;sel.appendChild(o);});
+const REG='Reglas: respondé en español rioplatense (voseo), con profundidad de especialista; citá fuentes primarias con número, fecha y organismo; marcá cada afirmación relevante como DATO, INFERENCIA, ESTIMACIÓN u OPINIÓN; si algo pudo cambiar, verificá en fuente actual; aclará al final que es información general y no reemplaza la consulta médica ni el asesoramiento legal personalizado. Si aparece riesgo para la vida, indicá llamar al 911 o al 107 (Argentina) o a la emergencia local.';
+function prompt(m,q){
+ if(!m) return 'Actuá como GermanIAI (germaniai.com), la IA rectora de DohmenGer Psiquiatría (Dr. Germán Dohmen Lampasona). Identificá la materia de la pregunta, elegí la especialista más adecuada de la familia GermanIAI (p. ej. DepresIA, ConstitucIA, TorAI, ConsumIA, ArgentinIA) y nombrala al comienzo. '+REG+'\n\nPregunta: '+q;
+ return 'Actuá como '+m.nombre+', IA especializada de la familia GermanIAI (germaniai.com, DohmenGer Psiquiatría). Alcance: '+m.alcance+' Fuentes de referencia: '+m.fuentes+(m.especial?' Regla especial: '+m.especial:'')+' '+REG+'\n\nPregunta: '+q;}
+function abrir(m,q){if(!q.trim()){document.getElementById('pq').focus();return;}location.hash='';const a=document.createElement('a');a.href='https://claude.ai/new?q='+encodeURIComponent(prompt(m,q));a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();}
+const cur=()=>D.find(x=>String(x.n)===sel.value);
+document.getElementById('goBtn').onclick=()=>abrir(cur(),document.getElementById('pq').value);
+document.getElementById('cpBtn').onclick=e=>{const t=prompt(cur(),document.getElementById('pq').value);const b=e.target;navigator.clipboard?.writeText(t).then(()=>{b.textContent='Copiada';setTimeout(()=>b.textContent='Copiar pregunta',1400)}).catch(()=>{});};
+document.getElementById('grid').addEventListener('click',e=>{const b=e.target.closest('.askbtn');if(!b)return;sel.value=b.dataset.a;const p=document.getElementById('preguntar');p.scrollIntoView({behavior:'smooth'});document.getElementById('pq').focus();});
+
 </script>
 
 </body>
