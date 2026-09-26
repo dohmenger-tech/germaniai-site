@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Revisión GermanIAI</title>
+<style>
+:root{--bg:#FBF6EF;--surface:#FFFFFF;--ink:#16323D;--muted:#5B6E75;--line:#E6DDD0;--azul:#1B5E7A;--verde:#2E9C7C;--coral:#E8603F;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:24px 60px;display:grid;gap:16px}
+h1{color:var(--azul);margin:0;font-size:26px}
+input,textarea{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+textarea{min-height:90px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px}
+.meta{font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+.ok{background:var(--verde);color:#fff}.no{background:var(--coral);color:#fff}.sec{background:transparent;border:1px solid var(--line);color:var(--azul)}
+.aviso{border-left:4px solid var(--coral);padding-left:10px;font-size:13px}
+a{color:var(--azul)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Revisión de investigaciones</h1>
+<p class="aviso">Antes de aprobar, revisá que no haya nombres, datos de salud de personas identificables ni errores. Podés corregir la pregunta y la respuesta: se publica lo que quede en los cuadros.</p>
+<form id="login" class="row"><input id="clave" type="password" placeholder="Clave de revisión" autocomplete="current-password" style="flex:1;min-width:200px"><button class="ok" type="submit">Entrar</button></form>
+<div id="estado" class="meta"></div>
+<div id="lista" style="display:grid;gap:12px"></div>
+</div>
+<script>
+let CLAVE='';try{CLAVE=sessionStorage.getItem('gclave')||'';}catch(e){}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const H=()=>({'Content-Type':'application/json','X-Clave':CLAVE});
+async function cargar(){
+ const est=document.getElementById('estado'); est.textContent='Cargando…';
+ const r=await fetch('/admin/api/pendientes',{headers:H()}); const j=await r.json().catch(()=>({}));
+ if(!r.ok){est.textContent=j.error||'Error';return;}
+ document.getElementById('login').hidden=true;
+ est.textContent=j.pendientes.length+' pendientes de revisión';
+ document.getElementById('lista').innerHTML=j.pendientes.map(p=>`<div class="item" data-id="${esc(p.id)}">
+ <div class="meta">${esc(p.ia)} · ${new Date(p.fecha).toLocaleString('es-AR',{timeZone:'America/Argentina/Mendoza'})} · ${(p.fuentes||[]).length} fuentes</div>
+ <label class="meta" for="q-${esc(p.id)}">Pregunta</label><textarea id="q-${esc(p.id)}" class="q">${esc(p.pregunta)}</textarea>
+ <label class="meta" for="a-${esc(p.id)}">Respuesta</label><textarea id="a-${esc(p.id)}" class="a" style="min-height:220px">${esc(p.respuesta)}</textarea>
+ <details><summary class="meta">Ver fuentes</summary><ol>${(p.fuentes||[]).map(f=>'<li><a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.titulo)+'</a></li>').join('')}</ol></details>
+ <div class="row"><button class="ok" data-act="aprobar">Aprobar y publicar</button><button class="no" data-act="descartar">Descartar</button></div>
+ <div class="meta res"></div></div>`).join('');
+}
+document.getElementById('login').addEventListener('submit',e=>{e.preventDefault();CLAVE=document.getElementById('clave').value;try{sessionStorage.setItem('gclave',CLAVE);}catch(x){}cargar();});
+document.getElementById('lista').addEventListener('click',async e=>{
+ const b=e.target.closest('button[data-act]');if(!b)return;const it=b.closest('.item'),res=it.querySelector('.res');
+ if(b.dataset.act==='descartar'&&b.textContent!=='Confirmar descarte'){b.textContent='Confirmar descarte';return;}
+ b.disabled=true;res.textContent='Procesando…';
+ const body={id:it.dataset.id,pregunta:it.querySelector('.q').value,respuesta:it.querySelector('.a').value};
+ const r=await fetch('/admin/api/'+b.dataset.act,{method:'POST',headers:H(),body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));
+ if(!r.ok){res.textContent=j.error||'Error';b.disabled=false;return;}
+ it.innerHTML=b.dataset.act==='aprobar'?'<div>Publicada: <a href="'+esc(j.enlace)+'" target="_blank" rel="noopener">ver en el archivo</a></div>':'<div class="meta">Descartada.</div>';
+});
+if(CLAVE)cargar();
+</script>
+</body>
+</html>
