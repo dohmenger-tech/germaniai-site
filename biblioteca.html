@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Biblioteca GermanIAI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231B5E7A'/%3E%3Ctext x='32' y='42' font-family='Arial' font-weight='700' font-size='26' fill='%23FFC24B' text-anchor='middle'%3EIA%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+*{box-sizing:border-box}[hidden]{display:none!important}
+:root{--bg:#FBF6EF;--surface:#FFFFFF;--ink:#16323D;--muted:#5B6E75;--line:#E6DDD0;--azul:#1B5E7A;--verde:#2E9C7C;--coral:#E8603F;--amar:#FFC24B;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;--amar:#FFC24B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;--amar:#FFC24B;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-size:15px;line-height:1.6;padding-top:env(safe-area-inset-top,0px)}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:24px 60px;display:flex;flex-direction:column;gap:16px}
+h1{font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--azul);margin:0;font-size:clamp(26px,5vw,38px)}
+a{color:var(--azul)}
+.meta{font-size:13px;color:var(--muted)}
+.barra{display:flex;justify-content:space-between;align-items:center;gap:8px 14px;flex-wrap:wrap}
+.docs{display:flex;flex-wrap:wrap;gap:8px}
+.doc{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;text-align:left}
+.doc[aria-pressed="true"]{background:var(--azul);color:var(--bg);border-color:var(--azul)}
+.doc small{display:block;font-size:11px;opacity:.75}
+button.sec{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--azul);padding:6px 12px;border-radius:8px;cursor:pointer}
+.aviso{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--coral);border-radius:10px;padding:12px 14px}
+.lector{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:900px){.lector.con-indice{grid-template-columns:240px minmax(0,1fr)}}
+nav.indice{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;max-height:70vh;overflow:auto;align-self:start}
+@media (min-width:900px){nav.indice{position:sticky;top:12px}}
+nav.indice a{display:block;padding:3px 0;text-decoration:none;color:var(--ink)}
+nav.indice a.n2{padding-left:10px}nav.indice a.n3{padding-left:20px;color:var(--muted)}
+article{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-wrap:anywhere}
+article h1,article h2,article h3{font-family:Fredoka,Nunito,sans-serif;font-weight:500;color:var(--azul);scroll-margin-top:12px}
+article h1{font-size:24px}article h2{font-size:20px}article h3{font-size:17px}
+article table{border-collapse:collapse;display:block;overflow-x:auto}
+article td,article th{border:1px solid var(--line);padding:4px 8px;vertical-align:top}
+article code{background:var(--bg);padding:1px 4px;border-radius:4px}
+article pre{background:var(--bg);padding:10px;border-radius:8px;overflow-x:auto}
+#filtro{font:inherit;font-size:16px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+mark{background:var(--amar);color:#16323D}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="barra"><a href="./#preguntar">← Volver a GermanIAI</a><span class="meta" id="ses"></span></div>
+<h1>Biblioteca privada</h1>
+<p class="meta" style="margin:0">Documentos del titular. Sólo se ven con su sesión iniciada; no quedan guardados en este dispositivo.</p>
+<div id="estado" class="aviso" hidden></div>
+<div class="docs" id="docs"></div>
+<div id="herr" class="barra" hidden>
+<input id="filtro" type="search" placeholder="Buscar en el documento" aria-label="Buscar en el documento" style="flex:1;min-width:200px">
+<button class="sec" id="bajar" type="button">Descargar .md</button>
+</div>
+<div class="meta" id="cuenta"></div>
+<div class="lector" id="lector"><nav class="indice" id="indice" hidden aria-label="Índice"></nav><article id="texto" hidden></article></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script>
+const BASES=['https://api.germaniai.com','https://germaniai-api.onrender.com'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let TOKEN=null,BASE=null,ACTUAL=null;
+try{TOKEN=localStorage.getItem('germaniai_sesion');}catch(e){}
+function aviso(html){const e=$('estado');e.innerHTML=html;e.hidden=!html;}
+async function base(){if(BASE)return BASE;for(const b of BASES){try{const r=await fetch(b+'/',{cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok&&j.ok){BASE=b;return b;}}catch(e){}}throw new Error('Failed to fetch');}
+async function api(p){const b=await base();const r=await fetch(b+p,{headers:{Authorization:'Bearer '+TOKEN},cache:'no-store'});return {r,j:await r.json().catch(()=>({}))};}
+const kb=n=>n>=1024?(n/1024).toFixed(n>=10240?0:1).replace('.',',')+' KB':n+' B';
+function pintar(md){
+ const art=$('texto'),ind=$('indice');
+ let html;try{html=DOMPurify.sanitize(marked.parse(md));}catch(e){html='<pre>'+esc(md)+'</pre>';}
+ art.innerHTML=html;art.hidden=false;
+ const hs=[...art.querySelectorAll('h1,h2,h3')];
+ hs.forEach((h,i)=>{h.id='s'+i;});
+ ind.innerHTML=hs.map((h,i)=>'<a class="n'+h.tagName[1]+'" href="#s'+i+'">'+esc(h.textContent)+'</a>').join('');
+ ind.hidden=hs.length<3;$('lector').classList.toggle('con-indice',hs.length>=3);
+ $('cuenta').textContent=hs.length+' secciones · '+md.length.toLocaleString('es-AR')+' caracteres';
+}
+async function abrir(n,btn){
+ document.querySelectorAll('.doc').forEach(b=>b.setAttribute('aria-pressed',b===btn));
+ aviso('');$('texto').hidden=true;$('indice').hidden=true;$('cuenta').textContent='Abriendo '+n+'…';
+ const {r,j}=await api('/biblioteca/doc?n='+encodeURIComponent(n));
+ if(!r.ok){$('cuenta').textContent='';aviso(esc(j.error||'No se pudo abrir el documento.'));return;}
+ ACTUAL={n,texto:j.texto};$('herr').hidden=false;$('filtro').value='';pintar(j.texto);
+}
+$('filtro').addEventListener('input',()=>{
+ if(!ACTUAL)return;const q=$('filtro').value.trim();pintar(ACTUAL.texto);if(q.length<2)return;
+ const art=$('texto'),rx=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');let n=0;
+ const w=document.createTreeWalker(art,NodeFilter.SHOW_TEXT),nodos=[];while(w.nextNode())nodos.push(w.currentNode);
+ nodos.forEach(t=>{if(!rx.test(t.nodeValue))return;rx.lastIndex=0;const s=document.createElement('span');s.innerHTML=esc(t.nodeValue).replace(new RegExp(esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>{n++;return '<mark>'+m+'</mark>';});t.replaceWith(s);});
+ $('cuenta').textContent=n+' coincidencias';const pm=art.querySelector('mark');if(pm)pm.scrollIntoView({block:'center'});
+});
+$('bajar').onclick=()=>{if(!ACTUAL)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ACTUAL.texto],{type:'text/markdown;charset=utf-8'}));a.download=ACTUAL.n;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);};
+(async()=>{
+ if(!TOKEN){aviso('Para ver la biblioteca, primero <a href="./#preguntar">entrá con tu usuario y contraseña</a>.');return;}
+ aviso('Conectando con el servidor… (si estaba dormido, puede tardar hasta un minuto)');
+ try{
+  const y=await api('/yo');
+  if(y.r.status===401){try{localStorage.removeItem('germaniai_sesion');}catch(e){}aviso('Tu sesión venció. <a href="./#preguntar">Volvé a entrar</a>.');return;}
+  $('ses').textContent='Sesión: '+(y.j.usuario||'');
+  const {r,j}=await api('/biblioteca');
+  if(r.status===403){aviso('La biblioteca es sólo del titular.');return;}
+  if(!r.ok){aviso(esc(j.error||'No se pudo leer la biblioteca.'));return;}
+  aviso('');
+  if(!j.docs.length){aviso(j.github?'La biblioteca está vacía.':'La biblioteca todavía no está conectada: falta cargar <strong>GITHUB_TOKEN</strong> en Render.');return;}
+  $('docs').innerHTML=j.docs.map(d=>'<button class="doc" type="button" data-n="'+esc(d.nombre)+'">'+esc(d.nombre)+'<small>'+kb(d.bytes||0)+'</small></button>').join('');
+  $('docs').addEventListener('click',e=>{const b=e.target.closest('.doc');if(b)abrir(b.dataset.n,b);});
+  const pref=j.docs.find(d=>d.nombre==='GermanIAI.md')||j.docs[0];abrir(pref.nombre,$('docs').querySelector('[data-n="'+CSS.escape(pref.nombre)+'"]'));
+ }catch(e){aviso('El servidor no responde. Probá de nuevo en 30 segundos.');}
+})();
+</script>
+</body>
+</html>

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
 <style>
-*{box-sizing:border-box}body{margin:0;padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;padding-top:env(safe-area-inset-top,0px)}[hidden]{display:none!important}
 :root{--bg:#FBF6EF;--surface:#FFFFFF;--ink:#16323D;--muted:#5B6E75;--line:#E6DDD0;--azul:#1B5E7A;--verde:#2E9C7C;--coral:#E8603F;--amar:#FFC24B;--chip:#EFE7DA;color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;--amar:#FFC24B;--chip:#1E3640;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0F1E24;--surface:#162A32;--ink:#EAF2F3;--muted:#9DB2B8;--line:#27414B;--azul:#6FB8D6;--verde:#5FD0AE;--coral:#FF8E70;--amar:#FFC24B;--chip:#1E3640;color-scheme:dark}
@@ -43,7 +43,16 @@ summary{cursor:pointer;color:var(--azul);font-weight:600}
 .ask{background:var(--surface);border:2px solid var(--azul);border-radius:16px;padding:18px;display:grid;gap:10px}
 .ask h2{margin:0}
 .ask label{font-size:13px;font-weight:700;color:var(--muted)}
-.ask select,.ask textarea{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask select,.ask textarea,.ask input[type=text],.ask input[type=password]{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus-visible,.ask select:focus-visible,.ask textarea:focus-visible{outline:2px solid var(--azul);outline-offset:1px}
+.login,.chatui{display:grid;gap:10px}
+.login{max-width:420px}
+.sesbar{display:flex;justify-content:space-between;align-items:center;gap:8px 14px;flex-wrap:wrap}
+.ses{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.ses a{color:var(--azul);font-weight:700}
+.ask label.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:14px;color:var(--ink)}
+.ask label.chk input{margin-top:4px}
+.candado{font-size:13px;color:var(--muted);margin:0}
 .ask textarea{min-height:96px;resize:vertical}
 .go{font:inherit;font-weight:700;font-size:16px;border:0;background:var(--coral);color:#fff;padding:12px 18px;border-radius:12px;cursor:pointer;justify-self:start}
 .go:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
@@ -80,16 +89,27 @@ h2{font-family:Fredoka,Nunito,sans-serif;font-weight:500;font-size:22px;margin:6
 </section>
 
 <section class="ask" id="preguntar">
-<h2>Preguntale a GermanIAI</h2>
+<div class="sesbar"><h2>Preguntale a GermanIAI</h2>
+<div class="ses" id="ses" hidden><span id="sesTxt"></span><a href="biblioteca.html" id="bibLink" hidden>Biblioteca</a><button class="copy" id="salirBtn" type="button">Salir</button></div></div>
+<form id="loginF" class="login" hidden>
+<p class="candado">El chat es privado: entrá con tu usuario y contraseña.</p>
+<div><label for="lu">Usuario</label><input id="lu" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></div>
+<div><label for="lc">Contraseña</label><input id="lc" name="password" type="password" autocomplete="current-password" required></div>
+<button class="go" id="loginBtn" type="submit">Entrar</button>
+<p class="err" id="loginErr" role="alert" hidden></p>
+</form>
+<div id="chatUI" class="chatui" hidden>
 <div><label for="iaSel">IA que responde</label>
 <select id="iaSel"><option value="">GermanIAI (elige sola la especialista adecuada)</option></select></div>
+<label class="chk" id="dirLbl" hidden><input type="checkbox" id="dirChk" checked><span>Aplicar mi Directiva (GermanIAI.md) a las respuestas</span></label>
 <div><label for="pq">Tu pregunta</label>
 <textarea id="pq" placeholder="Ej.: ¿Qué dice la Ley 26.657 sobre la internación involuntaria?"></textarea></div>
-<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;color:var(--ink)"><input type="checkbox" id="pubChk" checked style="margin-top:4px"> Autorizo que esta investigación, después de ser revisada por el equipo de DohmenGer, se publique en el <a href="archivo.html" style="color:var(--azul)">archivo público</a>. No escribas nombres, teléfonos, DNI ni datos de salud de personas concretas.</label>
+<label class="chk"><input type="checkbox" id="pubChk"><span>Autorizo que esta investigación, después de ser revisada por el equipo de DohmenGer, se publique en el <a href="archivo.html" style="color:var(--azul)">archivo público</a>. No escribas nombres, teléfonos, DNI ni datos de salud de personas concretas.</span></label>
 <button class="go" id="goBtn" type="button">Preguntar</button>
 <p class="hint">Cada respuesta se investiga en el momento en fuentes oficiales y científicas actuales, y lista las fuentes consultadas. Podés seguir repreguntando: la IA recuerda la conversación. Información general: no reemplaza la consulta médica ni legal.</p>
 <div class="row"><button class="copy" id="nuevaBtn" type="button">Nueva conversación</button></div>
 <div class="resp" id="resp" hidden></div>
+</div>
 </section>
 <h2>Catálogo</h2>
 <div class="tools">
@@ -126,32 +146,74 @@ const REG='Reglas: respondé en español rioplatense (voseo), con profundidad de
 function prompt(m,q){
  if(!m) return 'Actuá como GermanIAI (germaniai.com), la IA rectora de DohmenGer Psiquiatría (Dr. Germán Dohmen Lampasona). Identificá la materia de la pregunta, elegí la especialista más adecuada de la familia GermanIAI (p. ej. DepresIA, ConstitucIA, TorAI, ConsumIA, ArgentinIA) y nombrala al comienzo. '+REG+'\n\nPregunta: '+q;
  return 'Actuá como '+m.nombre+', IA especializada de la familia GermanIAI (germaniai.com, DohmenGer Psiquiatría). Alcance: '+m.alcance+' Fuentes de referencia: '+m.fuentes+(m.especial?' Regla especial: '+m.especial:'')+' '+REG+'\n\nPregunta: '+q;}
-const API='https://api.germaniai.com/chat';
-let hist=[];
+// ── Servidor del chat y sesión (usuario y contraseña) ──
+// Se prueba primero api.germaniai.com y, si todavía no responde, la dirección directa de Render.
+const BASES=['https://api.germaniai.com','https://germaniai-api.onrender.com'];
+const $=id=>document.getElementById(id);
+let BASE=null,TOKEN=null,YO=null,sondeo=null,hist=[];
+const guardar=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v);}catch(e){}};
+const leer=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+TOKEN=leer('germaniai_sesion');try{YO=JSON.parse(leer('germaniai_yo')||'null');}catch(e){YO=null;}
+if(!TOKEN)YO=null;
+function base(){
+ if(BASE)return Promise.resolve(BASE);
+ if(!sondeo)sondeo=(async()=>{for(const b of BASES){try{const r=await fetch(b+'/',{cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok&&j.ok){BASE=b;return b;}}catch(e){}}sondeo=null;throw new Error('Failed to fetch');})();
+ return sondeo;
+}
+async function api(p,o={}){
+ const b=await base(),h={'Content-Type':'application/json'};if(TOKEN)h.Authorization='Bearer '+TOKEN;
+ const r=await fetch(b+p,Object.assign({},o,{headers:h}));const j=await r.json().catch(()=>({}));
+ if(r.status===401&&j.login)cerrar();
+ return {r,j};
+}
+function sesionNueva(token,yo){TOKEN=token;YO=yo;guardar('germaniai_sesion',token);guardar('germaniai_yo',JSON.stringify(yo));mostrar();}
+function cerrar(){TOKEN=null;YO=null;guardar('germaniai_sesion',null);guardar('germaniai_yo',null);mostrar();}
+function mostrar(){
+ const dentro=!!(TOKEN&&YO);
+ $('loginF').hidden=dentro;$('chatUI').hidden=!dentro;$('ses').hidden=!dentro;
+ if(dentro){$('sesTxt').textContent='Sesión: '+YO.usuario+(YO.rol==='titular'?' (titular)':'');$('bibLink').hidden=YO.rol!=='titular';$('dirLbl').hidden=!(YO.rol==='titular'&&YO.directiva);}
+}
+$('loginF').addEventListener('submit',async e=>{
+ e.preventDefault();const btn=$('loginBtn'),err=$('loginErr');err.hidden=true;btn.disabled=true;btn.textContent='Entrando…';
+ try{
+  const {r,j}=await api('/login',{method:'POST',body:JSON.stringify({usuario:$('lu').value.trim(),clave:$('lc').value})});
+  if(!r.ok||!j.token)throw new Error(j.error||'No se pudo entrar.');
+  TOKEN=j.token;let yo={usuario:j.usuario,rol:j.rol,nombre:j.nombre,directiva:false};
+  try{const y=await api('/yo');if(y.r.ok)yo=y.j;}catch(x){}
+  $('lc').value='';sesionNueva(j.token,yo);$('pq').focus();
+ }catch(x){err.textContent=x.message==='Failed to fetch'?'El servidor está arrancando o no responde. Probá de nuevo en 30 segundos.':x.message;err.hidden=false;TOKEN=null;}
+ finally{btn.disabled=false;btn.textContent='Entrar';}
+});
+$('salirBtn').onclick=()=>{hist=[];const b=$('resp');b.innerHTML='';b.hidden=true;cerrar();$('lu').focus();};
 function md(t){try{return DOMPurify.sanitize(marked.parse(t));}catch(e){return esc(t).replace(/\n/g,'<br>');}}
 function claudeLink(m,q){return 'https://claude.ai/new?q='+encodeURIComponent(prompt(m,q));}
 async function preguntar(){
- const ta=document.getElementById('pq'),q=ta.value.trim(); if(!q){ta.focus();return;}
- const m=cur(), box=document.getElementById('resp'), go=document.getElementById('goBtn');
+ const ta=$('pq'),q=ta.value.trim(); if(!q){ta.focus();return;}
+ const m=cur(), box=$('resp'), go=$('goBtn');
  box.hidden=false; const t=document.createElement('div'); t.className='turno';
  t.innerHTML='<div class="q">'+esc(q)+'</div><div class="who">'+esc(m?m.nombre:'GermanIAI')+'</div><div class="a pensando">Investigando en fuentes oficiales y científicas… (puede tardar hasta un minuto)</div>';
  box.appendChild(t); t.scrollIntoView({behavior:'smooth',block:'start'}); go.disabled=true; go.textContent='Respondiendo…';
  const a=t.querySelector('.a');
  try{
-  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ia:m?m.n:null,pregunta:q,historial:hist,publicar:document.getElementById('pubChk').checked})});
-  const j=await r.json().catch(()=>({}));
+  const dir=!!(YO&&YO.rol==='titular'&&YO.directiva&&$('dirChk').checked);
+  const {r,j}=await api('/chat',{method:'POST',body:JSON.stringify({ia:m?m.n:null,pregunta:q,historial:hist,publicar:$('pubChk').checked,directiva:dir})});
+  if(r.status===401){$('loginErr').textContent='Tu sesión venció. Volvé a entrar con tu usuario y contraseña.';$('loginErr').hidden=false;$('lu').focus();return;}
   if(!r.ok||!j.respuesta) throw new Error(j.error||'La IA no está disponible en este momento.');
-  a.className='a'; let f=''; if(j.fuentes&&j.fuentes.length){f='<div class="fu"><div class="who">Fuentes consultadas'+(j.busquedas?' · '+j.busquedas+' búsquedas':'')+'</div><ol>'+j.fuentes.map(x=>'<li><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.titulo)+'</a></li>').join('')+'</ol></div>';} a.innerHTML=md(j.respuesta)+f+(j.pendiente?'<p class="hint">Quedó pendiente de revisión. Si se aprueba, aparecerá en el <a href="archivo.html" style="color:var(--azul)">archivo público</a>.</p>':''); hist.push({q,a:j.respuesta}); ta.value='';
+  a.className='a'; let f=''; if(j.fuentes&&j.fuentes.length){f='<div class="fu"><div class="who">Fuentes consultadas'+(j.busquedas?' · '+j.busquedas+' búsquedas':'')+'</div><ol>'+j.fuentes.map(x=>'<li><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.titulo)+'</a></li>').join('')+'</ol></div>';}
+  a.innerHTML=md(j.respuesta)+f+(j.directiva?'<p class="hint">Respondida con tu Directiva aplicada.</p>':'')+(j.sinBusqueda?'<p class="hint">Sin búsqueda web: está deshabilitada en la consola de Anthropic.</p>':'')+(j.pendiente?'<p class="hint">Quedó pendiente de revisión. Si se aprueba, aparecerá en el <a href="archivo.html" style="color:var(--azul)">archivo público</a>.</p>':''); hist.push({q,a:j.respuesta}); ta.value='';
  }catch(e){
   a.className='a err'; a.innerHTML=esc(e.message==='Failed to fetch'?'La IA se está despertando o no está disponible. Probá de nuevo en 30 segundos.':e.message)+' <a href="'+claudeLink(m,q)+'" target="_blank" rel="noopener" style="color:var(--azul)">Preguntar en Claude</a>';
  }finally{go.disabled=false; go.textContent='Preguntar';}
 }
 const cur=()=>D.find(x=>String(x.n)===sel.value);
-document.getElementById('goBtn').onclick=preguntar;
-document.getElementById('pq').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))preguntar();});
+$('goBtn').onclick=preguntar;
+$('pq').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))preguntar();});
 sel.addEventListener('change',()=>{hist=[];});
-document.getElementById('nuevaBtn').onclick=()=>{hist=[];const b=document.getElementById('resp');b.innerHTML='';b.hidden=true;document.getElementById('pq').focus();};
-document.getElementById('grid').addEventListener('click',e=>{const b=e.target.closest('.askbtn');if(!b)return;sel.value=b.dataset.a;const p=document.getElementById('preguntar');p.scrollIntoView({behavior:'smooth'});document.getElementById('pq').focus();});
+$('nuevaBtn').onclick=()=>{hist=[];const b=$('resp');b.innerHTML='';b.hidden=true;$('pq').focus();};
+$('grid').addEventListener('click',e=>{const b=e.target.closest('.askbtn');if(!b)return;sel.value=b.dataset.a;$('preguntar').scrollIntoView({behavior:'smooth'});(TOKEN&&YO?$('pq'):$('lu')).focus();});
+// Al abrir: se muestra enseguida lo que corresponde, se despierta el servidor y se confirma la sesión guardada.
+mostrar();
+base().then(()=>TOKEN?api('/yo'):null).then(y=>{if(y&&y.r.ok){YO=y.j;guardar('germaniai_yo',JSON.stringify(YO));mostrar();}}).catch(()=>{});
 
 </script>
 

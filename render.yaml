@@ -3,20 +3,30 @@ services:
     name: germaniai-api
     runtime: node
     plan: free
+    region: virginia
     rootDir: api
     buildCommand: echo sin dependencias
     startCommand: node server.js
     healthCheckPath: /
+    domains:
+      - api.germaniai.com
     envVars:
+      # Las tres primeras se escriben a mano al crear el servicio (nunca van en el código).
       - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: GITHUB_TOKEN
         sync: false
       - key: ADMIN_CLAVE
         sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: ADMIN_USUARIO
+        value: dohmenger
+      - key: SESION_SECRETO
+        generateValue: true
       - key: GITHUB_PRIVADO
         value: dohmenger-tech/germaniai-pendientes
       - key: MAX_POR_HORA
         value: "15"
+      - key: MAX_POR_HORA_TITULAR
+        value: "60"
       - key: MAX_POR_DIA
         value: "300"
